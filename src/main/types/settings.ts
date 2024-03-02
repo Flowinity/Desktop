@@ -5,4 +5,5 @@ export interface Settings {
   autoUpdate: boolean;
   windowBorder: boolean;
   restartRequired?: boolean;
+  startMinimized: boolean;
 }

@@ -35,9 +35,12 @@ function createWindow(): void {
     autoUpdater.checkForUpdates();
   }, 60000);
 
+  let settings = <Settings>store.get("settings");
+
   const autoLauncher = new AutoLaunch({
     name: "Flowinity",
-    isHidden: true,
+    isHidden:
+      settings?.startMinimized === undefined ? true : settings.startMinimized,
     path: process.env.APPIMAGE || app.getPath("exe")
   });
 
@@ -47,13 +50,12 @@ function createWindow(): void {
       minimizeToTray: true,
       desktopNotifications: true,
       autoUpdate: true,
-      windowBorder: true
+      windowBorder: true,
+      startMinimized: true
     });
 
     if (!is.dev) autoLauncher.enable();
   }
-
-  autoLauncher.enable();
 
   autoLauncher
     .isEnabled()
@@ -64,7 +66,7 @@ function createWindow(): void {
       console.error("Error checking auto launch:", err);
     });
 
-  const settings = <Settings>store.get("settings");
+  settings = <Settings>store.get("settings");
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({

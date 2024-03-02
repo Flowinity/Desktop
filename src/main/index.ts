@@ -36,7 +36,9 @@ function createWindow(): void {
   }, 60000);
 
   const autoLauncher = new AutoLaunch({
-    name: "Flowinity"
+    name: "Flowinity",
+    isHidden: true,
+    path: process.env.APPIMAGE || app.getPath("exe")
   });
 
   if (!store.get("settings")) {

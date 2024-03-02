@@ -51,6 +51,8 @@ function createWindow(): void {
     if (!is.dev) autoLauncher.enable();
   }
 
+  autoLauncher.enable();
+
   autoLauncher
     .isEnabled()
     .then((isEnabled) => {

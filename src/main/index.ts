@@ -11,6 +11,8 @@ import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "./assets/flowinity.png?asset";
 import unreadIcon from "./assets/flowinity-unread.png?asset";
+import sysTrayIcon from "./assets/flowinity-systray.png?asset";
+import unreadSysTrayIcon from "./assets/flowinity-unread-systray.png?asset";
 import handleNotifications from "./ipc/notifications";
 import handleFlowshot from "./ipc/flowshot";
 import AutoLaunch from "auto-launch";
@@ -130,7 +132,7 @@ function createWindow(): void {
     if (tray) {
       if (count === 0) {
         tray.setToolTip("Flowinity");
-        tray.setImage(icon);
+        tray.setImage(sysTrayIcon);
 
         // update the app icon badge, only works on MacOS
         app.setBadgeCount(0);
@@ -140,7 +142,7 @@ function createWindow(): void {
         }
       } else {
         tray.setToolTip(`Flowinity (${count} unread)`);
-        tray.setImage(unreadIcon);
+        tray.setImage(unreadSysTrayIcon);
 
         // update the app icon badge, only works on MacOS
         app.setBadgeCount(count);
@@ -186,9 +188,9 @@ app.whenReady().then(() => {
   const mainWindow = BrowserWindow.getAllWindows()[0];
 
   app.whenReady().then(() => {
-    tray = new Tray(icon);
+    tray = new Tray(sysTrayIcon);
     const contextMenu = Menu.buildFromTemplate([
-      { label: "Flowinity", type: "normal", enabled: false, icon },
+      { label: "Flowinity", type: "normal", enabled: false },
       { type: "separator" },
       {
         label: "Open",

@@ -24,6 +24,8 @@ const store = new Store();
 let tray: Tray | null = null;
 
 function createWindow(): void {
+  if (require("electron-squirrel-startup")) return;
+
   const server = "https://updates.flowinity.com";
   const url = `${server}/update/${process.platform}/${app.getVersion()}`;
 
@@ -238,6 +240,13 @@ app.whenReady().then(() => {
       }
     });
     tray.setContextMenu(contextMenu);
+  });
+
+  ipcMain.on("restart", () => {
+    console.log("Restarting app");
+    if (mainWindow) mainWindow.destroy();
+    app.quit();
+    app.relaunch();
   });
 
   app.on("activate", function () {

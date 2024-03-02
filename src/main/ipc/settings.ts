@@ -43,12 +43,6 @@ export default function handleSettings(): void {
     });
   });
 
-  ipcMain.on("restart", () => {
-    console.log("Restarting app");
-    app.quit();
-    app.relaunch();
-  });
-
   ipcMain.handle("get-version", () => {
     return app.getVersion();
   });

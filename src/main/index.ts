@@ -51,6 +51,15 @@ function createWindow(): void {
     if (!is.dev) autoLauncher.enable();
   }
 
+  autoLauncher
+    .isEnabled()
+    .then((isEnabled) => {
+      console.log("Auto launch enabled:", isEnabled);
+    })
+    .catch((err) => {
+      console.error("Error checking auto launch:", err);
+    });
+
   const settings = <Settings>store.get("settings");
 
   // Create the browser window.

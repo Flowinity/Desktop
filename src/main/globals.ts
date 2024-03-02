@@ -13,7 +13,6 @@ declare global {
       lookupCollection: (id: number) => any;
       openCollection: (id: number) => void;
       openEmoji: (...args) => void;
-      imageDomain: string | undefined;
     };
     _paq: {
       push: (args: any[]) => void;

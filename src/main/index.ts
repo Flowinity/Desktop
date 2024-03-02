@@ -157,6 +157,7 @@ function createWindow(): void {
   });
 
   ipcMain.on("update", () => {
+    mainWindow.destroy();
     autoUpdater.quitAndInstall();
   });
 

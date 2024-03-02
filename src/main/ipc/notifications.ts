@@ -8,7 +8,7 @@ const store = new Store();
 
 export default function handleNotifications(): void {
   const settings = <Settings>store.get("settings");
-  if (!settings.desktopNotifications) return;
+  if (!settings?.desktopNotifications) return;
   ipcMain.on(
     "new-message",
     async (_event, message: MessageSubscription & Instance) => {

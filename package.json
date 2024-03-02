@@ -3,7 +3,7 @@
   "version": "0.0.1-alpha.0",
   "description": "Flowinity Desktop",
   "main": "./out/main/index.js",
-  "author": "example.com",
+  "author": "Flowinity",
   "homepage": "https://flowinity.com",
   "scripts": {
     "format": "prettier --write .",
@@ -27,6 +27,7 @@
     "@types/auto-launch": "^5.0.5",
     "auto-launch": "^5.0.6",
     "axios": "^1.6.7",
+    "electron-builder-squirrel-windows": "^24.13.2",
     "electron-store": "^8.1.0",
     "electron-updater": "^6.1.7",
     "graphql": "^16.8.1"

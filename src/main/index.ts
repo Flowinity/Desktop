@@ -115,12 +115,10 @@ function createWindow(): void {
     return { action: "deny" };
   });
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev) {
     mainWindow.loadURL("http://localhost:3000");
   } else {
-    mainWindow.loadFile("https://flowinity.com");
+    mainWindow.loadURL("https://flowinity.com");
   }
 
   let lastMessageCount = 0;

@@ -64,6 +64,6 @@ export default {
     if (files.length > 50) {
       fs.unlinkSync(`${userDataPath}/flowinity/picture_cache/${files[0]}`);
     }
-    return `file://${profilePicturePath}`;
+    return profilePicturePath;
   }
 };

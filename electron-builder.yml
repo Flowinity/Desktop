@@ -35,8 +35,9 @@ dmg:
 linux:
   target:
     - AppImage
-    - snap
     - deb
+    - tar.gz
+    - rpm
   maintainer: Flowinity
   category: Internet
 appImage:

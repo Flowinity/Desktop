@@ -28,8 +28,13 @@ function createWindow(): void {
 
   const server = "https://updates.flowinity.com";
   const url = `${server}/update/${process.platform}/${app.getVersion()}`;
+  console.log(url);
 
   autoUpdater.setFeedURL({ url });
+
+  autoUpdater.on("error", (error) => {
+    console.error("Auto updater error:", error);
+  });
 
   setInterval(() => {
     autoUpdater.checkForUpdates();
@@ -178,6 +183,10 @@ function createWindow(): void {
 
   ipcMain.on("check-for-updates", () => {
     autoUpdater.checkForUpdates();
+  });
+
+  ipcMain.on("focus-window", () => {
+    mainWindow.show();
   });
 }
 

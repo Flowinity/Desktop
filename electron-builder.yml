@@ -1,5 +1,9 @@
 appId: com.flowinity.desktop
 productName: Flowinity
+build:
+  protocols:
+    name: Flowinity
+    schemes: flowinity
 directories:
   buildResources: build
 files:

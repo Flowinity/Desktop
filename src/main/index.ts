@@ -5,7 +5,8 @@ import {
   ipcMain,
   Tray,
   Menu,
-  autoUpdater
+  autoUpdater,
+  protocol
 } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
@@ -13,6 +14,8 @@ import icon from "./assets/flowinity.png?asset";
 import unreadIcon from "./assets/flowinity-unread.png?asset";
 import sysTrayIcon from "./assets/flowinity-systray.png?asset";
 import unreadSysTrayIcon from "./assets/flowinity-unread-systray.png?asset";
+import sysTrayDarwinIcon from "./assets/flowinity-systray-darwin.png?asset";
+import unreadSysTrayDarwinIcon from "./assets/flowinity-unread-systray-darwin.png?asset";
 import handleNotifications from "./ipc/notifications";
 import handleFlowshot from "./ipc/flowshot";
 import AutoLaunch from "auto-launch";
@@ -20,11 +23,57 @@ import handleSettings from "./ipc/settings";
 
 import Store from "electron-store";
 import { Settings } from "./types/settings";
+import path from "node:path";
 const store = new Store();
 let tray: Tray | null = null;
 
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: "flowinity",
+    privileges: {
+      standard: true,
+      secure: true
+    }
+  },
+  {
+    scheme: "flowinity-internal",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true
+    }
+  }
+]);
+
 function createWindow(): void {
   if (require("electron-squirrel-startup")) return;
+
+  if (process.defaultApp) {
+    if (process.argv.length >= 2) {
+      app.setAsDefaultProtocolClient("flowinity", process.execPath, [
+        path.resolve(process.argv[1])
+      ]);
+    }
+  } else {
+    app.setAsDefaultProtocolClient("flowinity");
+  }
+
+  const gotTheLock = app.requestSingleInstanceLock();
+
+  if (!gotTheLock) {
+    console.info("Another instance of Flowinity is already running.");
+    app.quit();
+    return;
+  } else {
+    app.on("second-instance", () => {
+      const mainWindow = BrowserWindow.getAllWindows()[0];
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.focus();
+        mainWindow.show();
+      }
+    });
+  }
 
   const server = "https://updates.flowinity.com";
   const url = `${server}/update/${process.platform}/${app.getVersion()}`;
@@ -113,9 +162,24 @@ function createWindow(): void {
       : mainWindow.webContents.openDevTools({ mode: "right" });
     }
 
+    const ctrl = input.control || input.meta;
+
     // allow ctrl r to refresh
-    if (input.type === "keyDown" && input.control && input.key === "R") {
+    if (input.type === "keyDown" && ctrl && input.key === "R") {
       mainWindow.webContents.reload();
+    }
+
+    // allow zooming
+    if (input.type === "keyDown" && ctrl && input.key === "=") {
+      mainWindow.webContents.zoomFactor += 0.1;
+    }
+
+    if (input.type === "keyDown" && ctrl && input.key === "-") {
+      mainWindow.webContents.zoomFactor -= 0.1;
+    }
+
+    if (input.type === "keyDown" && ctrl && input.key === "0") {
+      mainWindow.webContents.zoomFactor = 1;
     }
   });
 
@@ -154,7 +218,12 @@ function createWindow(): void {
     if (tray) {
       if (count === 0) {
         tray.setToolTip("Flowinity");
-        tray.setImage(sysTrayIcon);
+
+        if (process.platform === "darwin") {
+          tray.setImage(sysTrayDarwinIcon);
+        } else {
+          tray.setImage(sysTrayIcon);
+        }
 
         // update the app icon badge, only works on MacOS
         app.setBadgeCount(0);
@@ -164,7 +233,12 @@ function createWindow(): void {
         }
       } else {
         tray.setToolTip(`Flowinity (${count} unread)`);
-        tray.setImage(unreadSysTrayIcon);
+
+        if (process.platform === "darwin") {
+          tray.setImage(unreadSysTrayDarwinIcon);
+        } else {
+          tray.setImage(unreadSysTrayIcon);
+        }
 
         // update the app icon badge, only works on MacOS
         app.setBadgeCount(count);
@@ -214,58 +288,71 @@ app.whenReady().then(() => {
 
   const mainWindow = BrowserWindow.getAllWindows()[0];
 
-  app.whenReady().then(() => {
-    tray = new Tray(sysTrayIcon);
-    const contextMenu = Menu.buildFromTemplate([
-      { label: "Flowinity", type: "normal", enabled: false },
-      { type: "separator" },
-      {
-        label: "Open",
-        type: "normal",
-        click: (): void => {
-          if (mainWindow) {
-            mainWindow.show();
-          }
-        }
-      },
-      {
-        label: "Settings",
-        type: "normal",
-        click: (): void => {
-          if (mainWindow) {
-            mainWindow.webContents.send("open-settings");
-          }
-        }
-      },
-      {
-        label: "About",
-        type: "normal",
-        click: (): void => {
-          if (mainWindow) {
-            mainWindow.webContents.send("open-about");
-          }
-        }
-      },
-      { type: "separator" },
-      {
-        label: "Quit",
-        type: "normal",
-        click: (): void => {
-          if (mainWindow) {
-            mainWindow.destroy();
-          }
-          app.quit();
+  // We need a separate tray icon for MacOS since unlike KDE and Windows, it isn't scaled by the system.
+  tray = new Tray(
+    process.platform === "darwin" ? sysTrayDarwinIcon : sysTrayIcon
+  );
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: "Flowinity", type: "normal", enabled: false },
+    { type: "separator" },
+    {
+      label: "Open",
+      type: "normal",
+      click: (): void => {
+        if (mainWindow) {
+          mainWindow.show();
         }
       }
-    ]);
-    tray.setToolTip("Flowinity");
-    tray.on("click", () => {
-      if (mainWindow) {
-        mainWindow.show();
+    },
+    {
+      label: "Settings",
+      type: "normal",
+      click: (): void => {
+        if (mainWindow) {
+          mainWindow.webContents.send("open-settings");
+        }
       }
-    });
-    tray.setContextMenu(contextMenu);
+    },
+    {
+      label: "About",
+      type: "normal",
+      click: (): void => {
+        if (mainWindow) {
+          mainWindow.webContents.send("open-about");
+        }
+      }
+    },
+    {
+      label: "Check for Updates",
+      type: "normal",
+      click: (): void => {
+        if (process.platform !== "linux") {
+          autoUpdater.checkForUpdates();
+        } else {
+          mainWindow.webContents.send("check-for-updates");
+        }
+      }
+    },
+    { type: "separator" },
+    {
+      label: "Quit",
+      type: "normal",
+      click: (): void => {
+        if (mainWindow) {
+          mainWindow.destroy();
+        }
+        app.quit();
+      }
+    }
+  ]);
+  tray.setToolTip("Flowinity");
+  tray.on("click", () => {
+    if (mainWindow) {
+      mainWindow.show();
+    }
   });
+  tray.setContextMenu(contextMenu);
 
   ipcMain.on("restart", () => {
     console.log("Restarting app");
@@ -278,6 +365,12 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+
+  process.on("SIGINT", () => {
+    console.info("SIGINT received, quitting...");
+    if (mainWindow) mainWindow.destroy();
+    app.quit();
   });
 });
 

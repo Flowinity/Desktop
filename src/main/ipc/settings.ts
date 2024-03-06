@@ -14,6 +14,15 @@ export default function handleSettings(): void {
     });
   });
 
+  ipcMain.handle("get-settings", () => {
+    const settings = <Settings>store.get("settings");
+
+    return {
+      ...settings,
+      restartRequired: false
+    };
+  });
+
   ipcMain.on("set-settings", (event, args) => {
     const newSettings = JSON.parse(args);
     const settings = <Settings>store.get("settings");

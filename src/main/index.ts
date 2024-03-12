@@ -6,7 +6,8 @@ import {
   Tray,
   Menu,
   autoUpdater,
-  protocol
+  protocol,
+  powerMonitor
 } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
@@ -261,6 +262,10 @@ function createWindow(): void {
 
   ipcMain.on("focus-window", () => {
     mainWindow.show();
+  });
+
+  ipcMain.handle("get-idle-time", () => {
+    return powerMonitor.getSystemIdleTime();
   });
 }
 

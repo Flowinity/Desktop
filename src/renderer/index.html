@@ -81,7 +81,6 @@
           const title = document.getElementById("title");
           title.innerText = "Could not connect to instance.";
           const subtitle = document.getElementById("subtitle");
-          console.log(subtitle)
           subtitle.innerHTML = `Please check your internet connection and try again.<br>The instance you are trying to connect to may be down.<br><strong>Error code: <code>${error.error}</code></strong>`
           // change retry button
           const button = document.getElementById("confirm-button");

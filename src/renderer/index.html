@@ -75,7 +75,7 @@
       checkInstance();
 
       window.electron.ipcRenderer.on("last-error", (event, error) => {
-        if (error) {
+        if (error.error) {
           const input = document.getElementById("instance-input");
           input.value = error.instance;
           const title = document.getElementById("title");

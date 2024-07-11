@@ -6,4 +6,5 @@ export interface Settings {
   windowBorder: boolean;
   restartRequired?: boolean;
   startMinimized: boolean;
+  instance: null | string;
 }

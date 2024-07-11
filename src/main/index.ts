@@ -25,6 +25,7 @@ import handleSettings from "./ipc/settings";
 import Store from "electron-store";
 import { Settings } from "./types/settings";
 import path from "node:path";
+import handleInstance from "./ipc/instance";
 const store = new Store();
 let tray: Tray | null = null;
 
@@ -59,9 +60,9 @@ function createWindow(): void {
     app.setAsDefaultProtocolClient("flowinity");
   }
 
-  const gotTheLock = app.requestSingleInstanceLock();
+  const lock = app.requestSingleInstanceLock();
 
-  if (!gotTheLock) {
+  if (!lock) {
     console.info("Another instance of Flowinity is already running.");
     app.quit();
     return;
@@ -106,7 +107,8 @@ function createWindow(): void {
       desktopNotifications: true,
       autoUpdate: true,
       windowBorder: true,
-      startMinimized: true
+      startMinimized: true,
+      instance: null
     });
 
     if (!is.dev) autoLauncher.enable();
@@ -158,9 +160,9 @@ function createWindow(): void {
         input.control &&
         input.shift)
     ) {
-      mainWindow.webContents.isDevToolsOpened() ?
-        mainWindow.webContents.closeDevTools()
-      : mainWindow.webContents.openDevTools({ mode: "right" });
+      mainWindow.webContents.isDevToolsOpened()
+        ? mainWindow.webContents.closeDevTools()
+        : mainWindow.webContents.openDevTools({ mode: "right" });
     }
 
     const ctrl = input.control || input.meta;
@@ -204,11 +206,58 @@ function createWindow(): void {
     return { action: "deny" };
   });
 
-  if (is.dev) {
+  let lastError = "";
+
+  if (!is.dev) {
     mainWindow.loadURL("http://localhost:3000");
   } else {
-    mainWindow.loadURL("https://flowinity.com");
+    if (!settings.instance) {
+      mainWindow.loadFile("src/renderer/index.html");
+    } else {
+      if (settings.instance === "localhost:3000") {
+        mainWindow.loadURL("http://localhost:3000");
+      } else {
+        // if unable to connect, fallback
+        // ensure that /api/v3/core is accessible
+        fetch(`https://${settings.instance}/api/v3/core`)
+          .then(async (res) => {
+            //          // ensure that .name exists, parse JSON
+            let error = false;
+            try {
+              const json = await res.json();
+              if (!json.name) {
+                error = true;
+              }
+            } catch (e) {
+              error = true;
+            }
+            if (error) {
+              mainWindow.loadFile("src/renderer/index.html");
+              lastError = "not-flowinity-instance";
+            } else {
+              mainWindow
+                .loadURL(`https://${settings.instance}`)
+                .catch((error) => {
+                  mainWindow.loadFile("src/renderer/index.html");
+                  lastError = error.code;
+                });
+            }
+          })
+          .catch((error) => {
+            mainWindow.loadFile("src/renderer/index.html");
+            lastError = error.code || "unknown";
+          });
+      }
+    }
   }
+
+  ipcMain.on("get-error", (event) => {
+    console.log("Getting last error", lastError);
+    event.reply("last-error", {
+      error: lastError,
+      instance: settings.instance
+    });
+  });
 
   let lastMessageCount = 0;
 
@@ -288,6 +337,7 @@ app.whenReady().then(() => {
   handleNotifications();
   handleFlowshot();
   handleSettings();
+  handleInstance();
 
   createWindow();
 

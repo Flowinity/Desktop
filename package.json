@@ -1,6 +1,6 @@
 {
   "name": "flowinity-desktop",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Flowinity Desktop",
   "main": "./out/main/index.js",
   "author": "Flowinity",
@@ -38,13 +38,13 @@
     "@electron-toolkit/eslint-config-ts": "^1.0.1",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@types/node": "^18.19.9",
-    "electron": "^28.2.0",
-    "electron-builder": "^24.9.1",
-    "electron-vite": "^2.0.0",
+    "electron": "^31.2.0",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "vite": "^5.3.3"
   },
   "resolutions": {
     "jackspeak": "2.1.1"

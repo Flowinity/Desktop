@@ -1,42 +1,109 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Electron</title>
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
-    />
+  <!doctype html>
+  <html>
+    <head>
+      <meta charset="UTF-8" />
+      <title>Select Instance - Flowinity</title>
+      <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
 
-    <link href="./assets/main.css" type="text/css" rel="stylesheet" />
-  </head>
+      <link href="./assets/main.css" type="text/css" rel="stylesheet" />
+    </head>
 
-  <body>
-    <div id="app">
-      <img alt="logo" class="logo" src="./assets/electron.svg" />
-      <div class="creator">Powered by electron-vite</div>
-      <div class="text">
-        Build an Electron app with
-        <span class="ts">TypeScript</span>
-      </div>
-      <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
-      <div class="actions">
-        <div class="action">
-          <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
+    <body>
+      <div id="app">
+        <div class="flex-card">
+          <div class="card">
+            <div style="display:flex">
+                <svg style="width: 50px" viewBox="0 0 896 896" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M896 448C896 562.518 853.032 667.001 782.338 746.205V336.713C782.338 319.039 768.011 304.713 750.338 304.713H736.95C719.277 304.713 704.95 319.039 704.95 336.713V815.035C683.663 829.965 661.018 843.091 637.236 854.189V531.951C637.236 496.605 608.582 467.951 573.236 467.951H563.39C528.044 467.951 499.39 496.605 499.39 531.951V893.085C482.527 895.01 465.379 896 448 896C423.087 896 398.65 893.967 374.844 890.057V299.789C374.844 264.443 346.19 235.789 310.844 235.789H300.998C265.652 235.789 236.998 264.443 236.998 299.789V843.299C224.543 836.637 212.44 829.403 200.724 821.634V509.043C200.724 493.027 187.74 480.043 171.724 480.043H159.591C143.575 480.043 130.591 493.027 130.591 509.043V764.158C49.8865 683.136 0 571.394 0 448C0 200.576 200.576 0 448 0C695.424 0 896 200.576 896 448Z" fill="#D9D9D9"/>
+                </svg>
+                <h1 id="title" style="margin-left: 20px;">
+                Please enter your Flowinity instance.
+              </h1>
+            </div>
+            <p id="subtitle">
+              If you are using the official Flowinity.com, you can leave it as the default "flowinity.com"<br>
+              If you are using a third party instance, enter the instance URL in the input below.
+            </p>
+        <input   onchange="checkInstance()" value="flowinity.com" id="instance-input" class="text-field" onfocus="setInputFocused()" onblur="setInputBlurred()">
+            <small id="instance-result"></small>
+            <br>
+            <div class="float-right">
+            <button id="confirm-button" class="button" onclick="confirmInstance()">Continue</button>
+            </div>
+          </div>
         </div>
-        <div class="action">
-          <a id="ipcHandler" target="_blank" rel="noreferrer">Send IPC</a>
-        </div>
       </div>
+    <script>
+      function setInputFocused() {
+        const input = document.getElementById("instance-input");
+        input.classList.add("focused");
+      }
 
-      <ul class="versions">
-        <li class="electron-version"></li>
-        <li class="chrome-version"></li>
-        <li class="node-version"></li>
-      </ul>
-    </div>
+      function setInputBlurred() {
+        const input = document.getElementById("instance-input");
+        input.classList.remove("focused");
+      }
 
-    <script type="module" src="./src/renderer.ts"></script>
-  </body>
-</html>
+      async function checkInstance() {
+        const instance = document.getElementById("instance-input").value;
+        const result = document.getElementById("instance-result");
+        let ok = false;
+        await fetch(`https://${instance}/api/v3/core`)
+          .then(response => {
+            // put the data.name in the result
+            if (response.ok) {
+              response.json().then(data => {
+                result.innerText = `Instance name: ${data.name}`;
+              });
+              ok = true;
+            } else {
+              result.innerText = "Invalid instance. Please try again. Please ensure it's using HTTPS.";
+            }
+          })
+          .catch(error => {
+            result.innerText = "Invalid instance. Please try again. Please ensure it's using HTTPS.";
+          });
+        return ok;
+      }
+
+      async function confirmInstance() {
+        if(!await checkInstance()) return;
+        const instance = document.getElementById("instance-input").value;
+        window.electron.ipcRenderer.send("instance", instance);
+      }
+
+      checkInstance();
+
+      window.electron.ipcRenderer.on("last-error", (event, error) => {
+        if (error) {
+          const input = document.getElementById("instance-input");
+          input.value = error.instance;
+          const title = document.getElementById("title");
+          title.innerText = "Could not connect to instance.";
+          const subtitle = document.getElementById("subtitle");
+          console.log(subtitle)
+          subtitle.innerHTML = `Please check your internet connection and try again.<br>The instance you are trying to connect to may be down.<br><strong>Error code: <code>${error.error}</code></strong>`
+          // change retry button
+          const button = document.getElementById("confirm-button");
+          button.innerText = "Retry or Continue";
+          // retry every minute
+          setInterval(() => {
+            if (document.getElementById("instance-input").value === error.instance) confirmInstance()
+          }, 60000)
+        }
+      })
+
+      function checkError() {
+        window.electron.ipcRenderer.send("get-error")
+      }
+
+      checkError()
+
+      document.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+          confirmInstance()
+        }
+      });
+    </script>
+    </body>
+  </html>

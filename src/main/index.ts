@@ -208,11 +208,15 @@ function createWindow(): void {
 
   let lastError = "";
 
-  if (!is.dev) {
+  const rendererPath = is.dev
+    ? "src/renderer/index.html"
+    : "out/renderer/index.html";
+
+  if (is.dev) {
     mainWindow.loadURL("http://localhost:3000");
   } else {
     if (!settings.instance) {
-      mainWindow.loadFile("src/renderer/index.html");
+      mainWindow.loadFile(rendererPath);
     } else {
       if (settings.instance === "localhost:3000") {
         mainWindow.loadURL("http://localhost:3000");
@@ -238,13 +242,13 @@ function createWindow(): void {
               mainWindow
                 .loadURL(`https://${settings.instance}`)
                 .catch((error) => {
-                  mainWindow.loadFile("src/renderer/index.html");
+                  mainWindow.loadFile(rendererPath);
                   lastError = error.code;
                 });
             }
           })
           .catch((error) => {
-            mainWindow.loadFile("src/renderer/index.html");
+            mainWindow.loadFile(rendererPath);
             lastError = error.code || "unknown";
           });
       }

@@ -27,7 +27,7 @@
     "@graphql-typed-document-node/core": "^3.2.0",
     "@types/auto-launch": "^5.0.5",
     "auto-launch": "^5.0.6",
-    "axios": "^1.6.7",
+    "axios": "^1.8.2",
     "electron-builder-squirrel-windows": "^24.13.2",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
@@ -45,7 +45,7 @@
     "eslint": "^8.56.0",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3",
-    "vite": "^5.3.3"
+    "vite": "^5.4.18"
   },
   "resolutions": {
     "jackspeak": "2.1.1"

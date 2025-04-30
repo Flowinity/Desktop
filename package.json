@@ -1,5 +1,5 @@
 {
-  "name": "flowinity-desktop",
+  "name": "flowinity",
   "version": "1.0.8",
   "description": "Flowinity Desktop",
   "main": "./out/main/index.js",
